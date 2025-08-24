@@ -105,8 +105,7 @@ namespace SlidingTiles
             }
 
             // Check if the puzzle is solvable
-            var puzzleState = new PuzzleState(metadata.Width, metadata.Height, instance.Cells);
-            if (!puzzleState.IsSolvable())
+            if (!IsSolvable(metadata.Width, metadata.Height, instance.Cells))
             {
                 result.Errors.Add($"{instanceId}: Puzzle is not solvable");
             }
@@ -123,6 +122,41 @@ namespace SlidingTiles
                 {
                     result.Errors.Add($"{instanceId}: Invalid optimal value: {instance.OptimalValue}");
                 }
+            }
+        }
+
+        private bool IsSolvable(int width, int height, int[] cells)
+        {
+            // For a puzzle to be solvable, the number of inversions plus the row number of the empty tile
+            // must be even for odd-sized puzzles, or just the number of inversions must be even for even-sized puzzles
+            int inversions = 0;
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i] == 0) continue;
+                for (int j = i + 1; j < cells.Length; j++)
+                {
+                    if (cells[j] == 0) continue;
+                    if (cells[i] > cells[j]) inversions++;
+                }
+            }
+
+            if (width == 2)
+            {
+                // 2x2 puzzles: inversions must be even
+                return inversions % 2 == 0;
+            }
+            else if (width % 2 == 1)
+            {
+                // Odd width: inversions must be even
+                return inversions % 2 == 0;
+            }
+            else
+            {
+                // Even width ≥ 4: inversions + row of empty tile from bottom must be even
+                int emptyPosition = Array.IndexOf(cells, 0);
+                int emptyRowFromTop = emptyPosition / width;
+                int emptyRowFromBottom = height - 1 - emptyRowFromTop;
+                return (inversions + emptyRowFromBottom) % 2 == 0;
             }
         }
     }
