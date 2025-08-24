@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 
@@ -9,85 +10,61 @@ namespace SlidingTiles
     {
         static int Main(string[] args)
         {
-            if (args.Length == 0)
-            {
-                PrintUsage();
-                return 1;
-            }
+            var rootCommand = new RootCommand("Sliding Tiles Puzzle Tool");
 
-            try
+            var validateCommand = new Command("validate", "Validate a puzzle file");
+            var fileOption = new Option<FileInfo>(
+                "--file",
+                "The puzzle file to validate")
             {
-                switch (args[0].ToLower())
-                {
-                    case "validate":
-                        return HandleValidate(args.Skip(1).ToArray());
-                    case "eval":
-                        return HandleEval(args.Skip(1).ToArray());
-                    default:
-                        Console.WriteLine($"Unknown command: {args[0]}");
-                        PrintUsage();
-                        return 1;
-                }
-            }
-            catch (Exception ex)
+                IsRequired = true
+            };
+            validateCommand.AddOption(fileOption);
+            validateCommand.SetHandler((file) => ValidateCommand(file), fileOption);
+            rootCommand.AddCommand(validateCommand);
+
+            var evalCommand = new Command("eval", "Evaluate heuristics on a puzzle file");
+            var evalFileOption = new Option<FileInfo>(
+                "--file",
+                "The puzzle file to evaluate")
             {
-                Console.WriteLine($"Error: {ex.Message}");
-                return 1;
-            }
+                IsRequired = true
+            };
+            var heuristicsOption = new Option<string>(
+                "--heuristics",
+                "Comma-separated list of heuristic abbreviations (hd, md, mc)")
+            {
+                IsRequired = true
+            };
+            evalCommand.AddOption(evalFileOption);
+            evalCommand.AddOption(heuristicsOption);
+            evalCommand.SetHandler((file, heuristics) => EvalCommand(file, heuristics), evalFileOption, heuristicsOption);
+            rootCommand.AddCommand(evalCommand);
+
+            return rootCommand.Invoke(args);
         }
 
-        static void PrintUsage()
+        static int ValidateCommand(FileInfo file)
         {
-            Console.WriteLine("Sliding Tiles Puzzle Tool");
-            Console.WriteLine();
-            Console.WriteLine("Usage:");
-            Console.WriteLine("  slider validate --file <filename>");
-            Console.WriteLine("  slider eval --file <filename> --heuristics <heuristic_list>");
-            Console.WriteLine();
-            Console.WriteLine("Heuristics (comma-separated, 2-letter abbreviations):");
-            Console.WriteLine("  hd - Hamming Distance");
-            Console.WriteLine("  md - Manhattan Distance");
-            Console.WriteLine("  mc - Manhattan Distance with Linear Conflicts");
-        }
-
-        static int HandleValidate(string[] args)
-        {
-            string? filename = null;
-            
-            for (int i = 0; i < args.Length; i++)
+            if (!file.Exists)
             {
-                if (args[i] == "--file" && i + 1 < args.Length)
-                {
-                    filename = args[i + 1];
-                    break;
-                }
-            }
-
-            if (string.IsNullOrEmpty(filename))
-            {
-                Console.WriteLine("Error: --file parameter is required for validate command");
-                return 1;
-            }
-
-            if (!File.Exists(filename))
-            {
-                Console.WriteLine($"Error: File '{filename}' not found");
+                Console.WriteLine($"Error: File '{file.FullName}' not found");
                 return 1;
             }
 
             var validator = new PuzzleFileValidator();
-            var result = validator.ValidateFile(filename);
+            var result = validator.ValidateFile(file.FullName);
             
             if (result.IsValid)
             {
-                Console.WriteLine($"File '{filename}' is valid!");
+                Console.WriteLine($"File '{file.FullName}' is valid!");
                 Console.WriteLine($"Total blocks: {result.BlockCount}");
                 Console.WriteLine($"Total instances: {result.InstanceCount}");
                 return 0;
             }
             else
             {
-                Console.WriteLine($"File '{filename}' is invalid:");
+                Console.WriteLine($"File '{file.FullName}' is invalid:");
                 foreach (var error in result.Errors)
                 {
                     Console.WriteLine($"  - {error}");
@@ -96,47 +73,20 @@ namespace SlidingTiles
             }
         }
 
-        static int HandleEval(string[] args)
+        static int EvalCommand(FileInfo file, string heuristics)
         {
-            string? filename = null;
-            string? heuristics = null;
-            
-            for (int i = 0; i < args.Length; i++)
+            if (!file.Exists)
             {
-                if (args[i] == "--file" && i + 1 < args.Length)
-                {
-                    filename = args[i + 1];
-                }
-                else if (args[i] == "--heuristics" && i + 1 < args.Length)
-                {
-                    heuristics = args[i + 1];
-                }
-            }
-
-            if (string.IsNullOrEmpty(filename))
-            {
-                Console.WriteLine("Error: --file parameter is required for eval command");
-                return 1;
-            }
-
-            if (string.IsNullOrEmpty(heuristics))
-            {
-                Console.WriteLine("Error: --heuristics parameter is required for eval command");
-                return 1;
-            }
-
-            if (!File.Exists(filename))
-            {
-                Console.WriteLine($"Error: File '{filename}' not found");
+                Console.WriteLine($"Error: File '{file.FullName}' not found");
                 return 1;
             }
 
             var evaluator = new PuzzleEvaluator();
             var heuristicList = heuristics.Split(',').Select(h => h.Trim().ToLower()).ToList();
             
-            var result = evaluator.EvaluateFile(filename, heuristicList);
+            var result = evaluator.EvaluateFile(file.FullName, heuristicList);
             
-            Console.WriteLine($"Evaluation Results for '{filename}':");
+            Console.WriteLine($"Evaluation Results for '{file.FullName}':");
             Console.WriteLine();
             
             foreach (var blockResult in result.BlockResults)

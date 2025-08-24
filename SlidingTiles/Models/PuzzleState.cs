@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace SlidingTiles
 {
@@ -82,60 +81,5 @@ namespace SlidingTiles
             
             return Math.Abs(targetRow - currentRow) + Math.Abs(targetCol - currentCol);
         }
-    }
-
-    public class BlockMetadata
-    {
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public string? Source { get; set; }
-        public Dictionary<string, string> AdditionalProperties { get; set; } = new Dictionary<string, string>();
-    }
-
-    public class ProblemInstance
-    {
-        public int[] Cells { get; set; } = Array.Empty<int>();
-        public string OptimalValue { get; set; } = string.Empty;
-        public Dictionary<string, string> AdditionalProperties { get; set; } = new Dictionary<string, string>();
-    }
-
-    public class PuzzleBlock
-    {
-        public BlockMetadata? Metadata { get; set; }
-        public List<ProblemInstance> Instances { get; set; } = new List<ProblemInstance>();
-    }
-
-    public class ValidationResult
-    {
-        public bool IsValid { get; set; }
-        public List<string> Errors { get; set; } = new List<string>();
-        public int BlockCount { get; set; }
-        public int InstanceCount { get; set; }
-    }
-
-    public class HeuristicResult
-    {
-        public string HeuristicName { get; set; } = string.Empty;
-        public int Value { get; set; }
-    }
-
-    public class InstanceEvaluationResult
-    {
-        public int[] Cells { get; set; } = Array.Empty<int>();
-        public string OptimalValue { get; set; } = string.Empty;
-        public List<HeuristicResult> HeuristicResults { get; set; } = new List<HeuristicResult>();
-    }
-
-    public class BlockEvaluationResult
-    {
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public string? Source { get; set; }
-        public List<InstanceEvaluationResult> InstanceResults { get; set; } = new List<InstanceEvaluationResult>();
-    }
-
-    public class EvaluationResult
-    {
-        public List<BlockEvaluationResult> BlockResults { get; set; } = new List<BlockEvaluationResult>();
     }
 }

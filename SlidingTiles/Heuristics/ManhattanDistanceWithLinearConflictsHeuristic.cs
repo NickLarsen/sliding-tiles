@@ -1,54 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace SlidingTiles
 {
-    public interface IHeuristic
-    {
-        string Name { get; }
-        string Abbreviation { get; }
-        int Calculate(PuzzleState state);
-    }
-
-    public class HammingDistanceHeuristic : IHeuristic
-    {
-        public string Name => "Hamming Distance";
-        public string Abbreviation => "hd";
-
-        public int Calculate(PuzzleState state)
-        {
-            int hammingDistance = 0;
-            for (int i = 0; i < state.Cells.Length; i++)
-            {
-                if (state.Cells[i] != 0 && state.Cells[i] != i + 1)
-                {
-                    hammingDistance++;
-                }
-            }
-            return hammingDistance;
-        }
-    }
-
-    public class ManhattanDistanceHeuristic : IHeuristic
-    {
-        public string Name => "Manhattan Distance";
-        public string Abbreviation => "md";
-
-        public int Calculate(PuzzleState state)
-        {
-            int manhattanDistance = 0;
-            for (int i = 0; i < state.Cells.Length; i++)
-            {
-                if (state.Cells[i] != 0)
-                {
-                    manhattanDistance += state.GetManhattanDistance(i, state.Cells[i]);
-                }
-            }
-            return manhattanDistance;
-        }
-    }
-
     public class ManhattanDistanceWithLinearConflictsHeuristic : IHeuristic
     {
         public string Name => "Manhattan Distance with Linear Conflicts";
@@ -143,30 +94,6 @@ namespace SlidingTiles
             }
 
             return conflicts;
-        }
-    }
-
-    public static class HeuristicFactory
-    {
-        private static readonly Dictionary<string, IHeuristic> _heuristics = new Dictionary<string, IHeuristic>
-        {
-            { "hd", new HammingDistanceHeuristic() },
-            { "md", new ManhattanDistanceHeuristic() },
-            { "mc", new ManhattanDistanceWithLinearConflictsHeuristic() }
-        };
-
-        public static IHeuristic GetHeuristic(string abbreviation)
-        {
-            if (_heuristics.TryGetValue(abbreviation.ToLower(), out var heuristic))
-            {
-                return heuristic;
-            }
-            throw new ArgumentException($"Unknown heuristic abbreviation: {abbreviation}");
-        }
-
-        public static List<IHeuristic> GetHeuristics(List<string> abbreviations)
-        {
-            return abbreviations.Select(GetHeuristic).ToList();
         }
     }
 }
