@@ -117,30 +117,6 @@ namespace SlidingTiles
         {
             var puzzles = GenerateAllPuzzles();
             
-            // Ensure filename has .puz extension
-            if (!filename.EndsWith(".puz", StringComparison.OrdinalIgnoreCase))
-            {
-                filename = Path.ChangeExtension(filename, ".puz");
-            }
-            
-            using (var writer = new StreamWriter(filename, false, Encoding.UTF8))
-            {
-                // Write metadata
-                writer.WriteLine($"#width:{_width}|height:{_height}|source:{source}");
-                
-                // Write all puzzles
-                foreach (var puzzle in puzzles)
-                {
-                    var cellsString = string.Join(",", puzzle.Cells);
-                    writer.WriteLine($"{cellsString}#optimal:{puzzle.OptimalValue}");
-                }
-            }
-        }
-
-        public void SaveToGzippedFile(string filename, string source = "Generated 3x3 Puzzles")
-        {
-            var puzzles = GenerateAllPuzzles();
-            
             // Ensure filename has .puz.gz extension
             if (!filename.EndsWith(".puz.gz", StringComparison.OrdinalIgnoreCase))
             {

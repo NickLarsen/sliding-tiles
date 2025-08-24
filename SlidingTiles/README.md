@@ -7,7 +7,7 @@ A comprehensive tool for working with sliding tile puzzles, featuring validation
 - **File Validation**: Validates puzzle file format and checks puzzle solvability
 - **Heuristic Evaluation**: Applies multiple heuristics to puzzle instances
 - **Multiple Puzzle Sizes**: Supports puzzles of any width and height
-- **Puzzle Generation**: Generates all valid 3x3 puzzle instances using BFS
+- **Puzzle Generation**: Generates all valid 3x3 puzzle instances using BFS (gzipped output)
 - **Compression Support**: Supports both plain text (.puz) and gzipped (.puz.gz) files
 - **Three Built-in Heuristics**:
   - **hd**: Hamming Distance - counts misplaced tiles
@@ -28,11 +28,8 @@ dotnet run -- eval --file <filename> --heuristics <heuristic_list>
 
 ### Generation
 ```bash
-# Generate plain text .puz file
+# Generate gzipped .puz.gz file (recommended)
 dotnet run -- generate --output <filename>
-
-# Generate gzipped .puz.gz file
-dotnet run -- gzip --output <filename>
 ```
 
 Where `<heuristic_list>` is a comma-separated list of 2-letter heuristic abbreviations.
@@ -94,11 +91,8 @@ dotnet run -- validate --file example_puzzles.puz
 # Run evaluation with all heuristics
 dotnet run -- eval --file example_puzzles.puz --heuristics hd,md,mc
 
-# Generate all valid 3x3 puzzles
-dotnet run -- generate --output all_3x3_puzzles.puz
-
-# Generate compressed 3x3 puzzles
-dotnet run -- gzip --output all_3x3_puzzles.puz.gz
+# Generate all valid 3x3 puzzles (gzipped output)
+dotnet run -- generate --output all_3x3_puzzles
 ```
 
 ## Heuristic Details
@@ -120,3 +114,4 @@ The tool is designed for performance-critical evaluation scenarios:
 - Provides fine control over memory representation
 - Built with .NET for cross-platform performance
 - Supports gzipped files for efficient storage and transfer
+- Generated puzzle files are automatically compressed for space efficiency

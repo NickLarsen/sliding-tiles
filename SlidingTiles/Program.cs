@@ -41,10 +41,10 @@ namespace SlidingTiles
             evalCommand.SetHandler((file, heuristics) => EvalCommand(file, heuristics), evalFileOption, heuristicsOption);
             rootCommand.AddCommand(evalCommand);
 
-            var generateCommand = new Command("generate", "Generate all valid 3x3 puzzle instances using BFS");
+            var generateCommand = new Command("generate", "Generate all valid 3x3 puzzle instances using BFS and compress with gzip");
             var outputFileOption = new Option<FileInfo>(
                 "--output",
-                "The output puzzle file to generate (will use .puz extension)")
+                "The output gzipped puzzle file to generate (will use .puz.gz extension)")
             {
                 IsRequired = true
             };
@@ -58,24 +58,6 @@ namespace SlidingTiles
             generateCommand.AddOption(sourceOption);
             generateCommand.SetHandler((outputFile, source) => GenerateCommand(outputFile, source), outputFileOption, sourceOption);
             rootCommand.AddCommand(generateCommand);
-
-            var gzipCommand = new Command("gzip", "Generate all valid 3x3 puzzle instances using BFS and compress with gzip");
-            var gzipOutputFileOption = new Option<FileInfo>(
-                "--output",
-                "The output gzipped puzzle file to generate (will use .puz.gz extension)")
-            {
-                IsRequired = true
-            };
-            var gzipSourceOption = new Option<string>(
-                "--source",
-                "Source description for the generated puzzles")
-            {
-                IsRequired = false
-            };
-            gzipCommand.AddOption(gzipOutputFileOption);
-            gzipCommand.AddOption(gzipSourceOption);
-            gzipCommand.SetHandler((outputFile, source) => GzipCommand(outputFile, source), gzipOutputFileOption, gzipSourceOption);
-            rootCommand.AddCommand(gzipCommand);
 
             return rootCommand.Invoke(args);
         }
@@ -154,54 +136,12 @@ namespace SlidingTiles
         {
             try
             {
-                Console.WriteLine("Generating all valid 3x3 puzzle instances using BFS...");
+                Console.WriteLine("Generating all valid 3x3 puzzle instances using BFS and compressing with gzip...");
                 
                 var generator = new PuzzleGenerator(3, 3);
                 var sourceDescription = string.IsNullOrEmpty(source) ? "Generated 3x3 Puzzles - All Valid Solvable Configurations" : source;
                 
                 generator.SaveToFile(outputFile.FullName, sourceDescription);
-                
-                // Count the puzzles to show how many were generated
-                var puzzles = generator.GenerateAllPuzzles();
-                
-                Console.WriteLine($"Successfully generated {puzzles.Count} valid 3x3 puzzle instances!");
-                Console.WriteLine($"Output file: {outputFile.FullName}");
-                Console.WriteLine($"Source: {sourceDescription}");
-                
-                // Show some statistics
-                var maxDepth = puzzles.Max(p => int.Parse(p.OptimalValue));
-                Console.WriteLine($"Maximum depth (optimal moves): {maxDepth}");
-                
-                // Group by depth and show counts
-                var depthGroups = puzzles.GroupBy(p => int.Parse(p.OptimalValue))
-                                       .OrderBy(g => g.Key)
-                                       .Select(g => new { Depth = g.Key, Count = g.Count() });
-                
-                Console.WriteLine("\nPuzzle distribution by depth:");
-                foreach (var group in depthGroups)
-                {
-                    Console.WriteLine($"  {group.Depth} moves: {group.Count} puzzles");
-                }
-                
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error generating puzzles: {ex.Message}");
-                return 1;
-            }
-        }
-
-        static int GzipCommand(FileInfo outputFile, string? source)
-        {
-            try
-            {
-                Console.WriteLine("Generating all valid 3x3 puzzle instances using BFS and compressing with gzip...");
-                
-                var generator = new PuzzleGenerator(3, 3);
-                var sourceDescription = string.IsNullOrEmpty(source) ? "Generated 3x3 Puzzles - All Valid Solvable Configurations (Gzipped)" : source;
-                
-                generator.SaveToGzippedFile(outputFile.FullName, sourceDescription);
                 
                 // Count the puzzles to show how many were generated
                 var puzzles = generator.GenerateAllPuzzles();
@@ -237,7 +177,7 @@ namespace SlidingTiles
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error generating gzipped puzzles: {ex.Message}");
+                Console.WriteLine($"Error generating puzzles: {ex.Message}");
                 return 1;
             }
         }
