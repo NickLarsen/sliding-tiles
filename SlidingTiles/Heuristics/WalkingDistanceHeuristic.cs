@@ -106,18 +106,30 @@ namespace SlidingTiles
             // Calculate minimum moves needed to transform current row to target row
             for (int i = 0; i < currentCopy.Length; i++)
             {
-                if (currentCopy[i] != targetCopy[i])
+                // Find the target position of current value
+                int targetPos = Array.IndexOf(targetCopy, currentCopy[i]);
+                if (targetPos != -1)
                 {
-                    // Find the target position of current value
-                    int targetPos = Array.IndexOf(targetCopy, currentCopy[i]);
-                    if (targetPos != -1)
-                    {
-                        distance += Math.Abs(i - targetPos);
-                    }
+                    distance += Math.Abs(i - targetPos);
+                }
+                else
+                {
+                    // If value not found in target, it needs to be moved to its correct position
+                    // This contributes to the distance
+                    distance += 1;
                 }
             }
             
-            return distance / 2; // Divide by 2 because each move affects two positions
+            // Add penalty for values in target that are not in current
+            for (int i = 0; i < targetCopy.Length; i++)
+            {
+                if (Array.IndexOf(currentCopy, targetCopy[i]) == -1)
+                {
+                    distance += 1;
+                }
+            }
+            
+            return distance;
         }
 
         private int CalculateColumnDistance(int[] current, int[] target)
@@ -133,18 +145,30 @@ namespace SlidingTiles
             // Calculate minimum moves needed to transform current column to target column
             for (int i = 0; i < currentCopy.Length; i++)
             {
-                if (currentCopy[i] != targetCopy[i])
+                // Find the target position of current value
+                int targetPos = Array.IndexOf(targetCopy, currentCopy[i]);
+                if (targetPos != -1)
                 {
-                    // Find the target position of current value
-                    int targetPos = Array.IndexOf(targetCopy, currentCopy[i]);
-                    if (targetPos != -1)
-                    {
-                        distance += Math.Abs(i - targetPos);
-                    }
+                    distance += Math.Abs(i - targetPos);
+                }
+                else
+                {
+                    // If value not found in target, it needs to be moved to its correct position
+                    // This contributes to the distance
+                    distance += 1;
                 }
             }
             
-            return distance / 2; // Divide by 2 because each move affects two positions
+            // Add penalty for values in target that are not in current
+            for (int i = 0; i < targetCopy.Length; i++)
+            {
+                if (Array.IndexOf(currentCopy, targetCopy[i]) == -1)
+                {
+                    distance += 1;
+                }
+            }
+            
+            return distance;
         }
     }
 }
