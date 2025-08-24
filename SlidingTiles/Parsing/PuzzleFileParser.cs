@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
+using System.Text;
 
 namespace SlidingTiles
 {
@@ -8,7 +10,18 @@ namespace SlidingTiles
     {
         public List<PuzzleBlock> ParseFile(string filename)
         {
-            var lines = File.ReadAllLines(filename);
+            string[] lines;
+            
+            // Check if file is gzipped
+            if (filename.EndsWith(".gz", StringComparison.OrdinalIgnoreCase))
+            {
+                lines = ReadGzippedFile(filename);
+            }
+            else
+            {
+                lines = File.ReadAllLines(filename, Encoding.UTF8);
+            }
+            
             var blocks = new List<PuzzleBlock>();
             PuzzleBlock? currentBlock = null;
             BlockMetadata? currentMetadata = null;
@@ -96,6 +109,16 @@ namespace SlidingTiles
             }
 
             return blocks;
+        }
+
+        private string[] ReadGzippedFile(string filename)
+        {
+            using var fileStream = File.OpenRead(filename);
+            using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzipStream, Encoding.UTF8);
+            
+            var content = reader.ReadToEnd();
+            return content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
         }
 
         private ProblemInstance ParseProblemInstance(string line, int lineNumber)

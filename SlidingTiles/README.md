@@ -1,12 +1,14 @@
 # Sliding Tiles Puzzle Tool
 
-A command-line tool for evaluating different heuristic strategies on sliding tile puzzles without implementing a solver.
+A comprehensive tool for working with sliding tile puzzles, featuring validation, heuristic evaluation, and puzzle generation capabilities.
 
 ## Features
 
 - **File Validation**: Validates puzzle file format and checks puzzle solvability
 - **Heuristic Evaluation**: Applies multiple heuristics to puzzle instances
 - **Multiple Puzzle Sizes**: Supports puzzles of any width and height
+- **Puzzle Generation**: Generates all valid 3x3 puzzle instances using BFS
+- **Compression Support**: Supports both plain text (.puz) and gzipped (.puz.gz) files
 - **Three Built-in Heuristics**:
   - **hd**: Hamming Distance - counts misplaced tiles
   - **md**: Manhattan Distance - sum of Manhattan distances to goal positions
@@ -24,11 +26,20 @@ dotnet run -- validate --file <filename>
 dotnet run -- eval --file <filename> --heuristics <heuristic_list>
 ```
 
+### Generation
+```bash
+# Generate plain text .puz file
+dotnet run -- generate --output <filename>
+
+# Generate gzipped .puz.gz file
+dotnet run -- gzip --output <filename>
+```
+
 Where `<heuristic_list>` is a comma-separated list of 2-letter heuristic abbreviations.
 
 ## File Format
 
-The tool uses a human-readable text format for puzzle files. Each file contains one or more blocks, where each block defines puzzles of the same dimensions.
+The tool uses a human-readable text format for puzzle files with `.puz` extension. Each file contains one or more blocks, where each block defines puzzles of the same dimensions. The tool also supports gzipped `.puz.gz` files for space efficiency.
 
 ### Block Structure
 
@@ -78,10 +89,16 @@ The tool automatically checks if each puzzle is solvable using the following rul
 dotnet build
 
 # Run validation
-dotnet run -- validate --file example_puzzles.txt
+dotnet run -- validate --file example_puzzles.puz
 
 # Run evaluation with all heuristics
-dotnet run -- eval --file example_puzzles.txt --heuristics hd,md,mc
+dotnet run -- eval --file example_puzzles.puz --heuristics hd,md,mc
+
+# Generate all valid 3x3 puzzles
+dotnet run -- generate --output all_3x3_puzzles.puz
+
+# Generate compressed 3x3 puzzles
+dotnet run -- gzip --output all_3x3_puzzles.puz.gz
 ```
 
 ## Heuristic Details
@@ -102,3 +119,4 @@ The tool is designed for performance-critical evaluation scenarios:
 - Minimizes allocations during heuristic calculations
 - Provides fine control over memory representation
 - Built with .NET for cross-platform performance
+- Supports gzipped files for efficient storage and transfer

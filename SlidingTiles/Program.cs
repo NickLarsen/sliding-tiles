@@ -15,7 +15,7 @@ namespace SlidingTiles
             var validateCommand = new Command("validate", "Validate a puzzle file");
             var fileOption = new Option<FileInfo>(
                 "--file",
-                "The puzzle file to validate")
+                "The puzzle file to validate (.puz or .puz.gz)")
             {
                 IsRequired = true
             };
@@ -26,7 +26,7 @@ namespace SlidingTiles
             var evalCommand = new Command("eval", "Evaluate heuristics on a puzzle file");
             var evalFileOption = new Option<FileInfo>(
                 "--file",
-                "The puzzle file to evaluate")
+                "The puzzle file to evaluate (.puz or .puz.gz)")
             {
                 IsRequired = true
             };
@@ -40,6 +40,42 @@ namespace SlidingTiles
             evalCommand.AddOption(heuristicsOption);
             evalCommand.SetHandler((file, heuristics) => EvalCommand(file, heuristics), evalFileOption, heuristicsOption);
             rootCommand.AddCommand(evalCommand);
+
+            var generateCommand = new Command("generate", "Generate all valid 3x3 puzzle instances using BFS");
+            var outputFileOption = new Option<FileInfo>(
+                "--output",
+                "The output puzzle file to generate (will use .puz extension)")
+            {
+                IsRequired = true
+            };
+            var sourceOption = new Option<string>(
+                "--source",
+                "Source description for the generated puzzles")
+            {
+                IsRequired = false
+            };
+            generateCommand.AddOption(outputFileOption);
+            generateCommand.AddOption(sourceOption);
+            generateCommand.SetHandler((outputFile, source) => GenerateCommand(outputFile, source), outputFileOption, sourceOption);
+            rootCommand.AddCommand(generateCommand);
+
+            var gzipCommand = new Command("gzip", "Generate all valid 3x3 puzzle instances using BFS and compress with gzip");
+            var gzipOutputFileOption = new Option<FileInfo>(
+                "--output",
+                "The output gzipped puzzle file to generate (will use .puz.gz extension)")
+            {
+                IsRequired = true
+            };
+            var gzipSourceOption = new Option<string>(
+                "--source",
+                "Source description for the generated puzzles")
+            {
+                IsRequired = false
+            };
+            gzipCommand.AddOption(gzipOutputFileOption);
+            gzipCommand.AddOption(gzipSourceOption);
+            gzipCommand.SetHandler((outputFile, source) => GzipCommand(outputFile, source), gzipOutputFileOption, gzipSourceOption);
+            rootCommand.AddCommand(gzipCommand);
 
             return rootCommand.Invoke(args);
         }
@@ -112,6 +148,98 @@ namespace SlidingTiles
             }
             
             return 0;
+        }
+
+        static int GenerateCommand(FileInfo outputFile, string? source)
+        {
+            try
+            {
+                Console.WriteLine("Generating all valid 3x3 puzzle instances using BFS...");
+                
+                var generator = new PuzzleGenerator(3, 3);
+                var sourceDescription = string.IsNullOrEmpty(source) ? "Generated 3x3 Puzzles - All Valid Solvable Configurations" : source;
+                
+                generator.SaveToFile(outputFile.FullName, sourceDescription);
+                
+                // Count the puzzles to show how many were generated
+                var puzzles = generator.GenerateAllPuzzles();
+                
+                Console.WriteLine($"Successfully generated {puzzles.Count} valid 3x3 puzzle instances!");
+                Console.WriteLine($"Output file: {outputFile.FullName}");
+                Console.WriteLine($"Source: {sourceDescription}");
+                
+                // Show some statistics
+                var maxDepth = puzzles.Max(p => int.Parse(p.OptimalValue));
+                Console.WriteLine($"Maximum depth (optimal moves): {maxDepth}");
+                
+                // Group by depth and show counts
+                var depthGroups = puzzles.GroupBy(p => int.Parse(p.OptimalValue))
+                                       .OrderBy(g => g.Key)
+                                       .Select(g => new { Depth = g.Key, Count = g.Count() });
+                
+                Console.WriteLine("\nPuzzle distribution by depth:");
+                foreach (var group in depthGroups)
+                {
+                    Console.WriteLine($"  {group.Depth} moves: {group.Count} puzzles");
+                }
+                
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating puzzles: {ex.Message}");
+                return 1;
+            }
+        }
+
+        static int GzipCommand(FileInfo outputFile, string? source)
+        {
+            try
+            {
+                Console.WriteLine("Generating all valid 3x3 puzzle instances using BFS and compressing with gzip...");
+                
+                var generator = new PuzzleGenerator(3, 3);
+                var sourceDescription = string.IsNullOrEmpty(source) ? "Generated 3x3 Puzzles - All Valid Solvable Configurations (Gzipped)" : source;
+                
+                generator.SaveToGzippedFile(outputFile.FullName, sourceDescription);
+                
+                // Count the puzzles to show how many were generated
+                var puzzles = generator.GenerateAllPuzzles();
+                
+                Console.WriteLine($"Successfully generated {puzzles.Count} valid 3x3 puzzle instances and compressed with gzip!");
+                Console.WriteLine($"Output file: {outputFile.FullName}");
+                Console.WriteLine($"Source: {sourceDescription}");
+                
+                // Show file size information
+                var fileInfo = new FileInfo(outputFile.FullName);
+                if (fileInfo.Exists)
+                {
+                    var sizeKB = fileInfo.Length / 1024.0;
+                    Console.WriteLine($"File size: {sizeKB:F1} KB");
+                }
+                
+                // Show some statistics
+                var maxDepth = puzzles.Max(p => int.Parse(p.OptimalValue));
+                Console.WriteLine($"Maximum depth (optimal moves): {maxDepth}");
+                
+                // Group by depth and show counts
+                var depthGroups = puzzles.GroupBy(p => int.Parse(p.OptimalValue))
+                                       .OrderBy(g => g.Key)
+                                       .Select(g => new { Depth = g.Key, Count = g.Count() });
+                
+                Console.WriteLine("\nPuzzle distribution by depth:");
+                foreach (var group in depthGroups)
+                {
+                    Console.WriteLine($"  {group.Depth} moves: {group.Count} puzzles");
+                }
+                
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating gzipped puzzles: {ex.Message}");
+                return 1;
+            }
         }
     }
 }
