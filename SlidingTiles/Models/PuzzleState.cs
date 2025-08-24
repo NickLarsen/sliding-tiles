@@ -25,15 +25,5 @@ namespace SlidingTiles
             }
             return Cells[Cells.Length - 1] == 0;
         }
-
-        public int GetRow(int position)
-        {
-            return position / Width;
-        }
-
-        public int GetCol(int position)
-        {
-            return position % Width;
-        }
     }
 }
