@@ -10,7 +10,8 @@ namespace SlidingTiles
         {
             { "hd", new HammingDistanceHeuristic() },
             { "md", new ManhattanDistanceHeuristic() },
-            { "mc", new ManhattanDistanceWithLinearConflictsHeuristic() }
+            { "mc", new ManhattanDistanceWithLinearConflictsHeuristic() },
+            { "wd", new WalkingDistanceHeuristic() }
         };
 
         public static IHeuristic GetHeuristic(string abbreviation)
