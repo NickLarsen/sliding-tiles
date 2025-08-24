@@ -28,18 +28,22 @@ namespace SlidingTiles
                 "--file",
                 "The puzzle file to evaluate (.puz or .puz.gz)")
             {
-                IsRequired = true
+                IsRequired = false
             };
             var heuristicsOption = new Option<string>(
                 "--heuristics",
                 "Comma-separated list of heuristic abbreviations (hd, md, mc)")
             {
-                IsRequired = true
+                IsRequired = false
             };
             evalCommand.AddOption(evalFileOption);
             evalCommand.AddOption(heuristicsOption);
             evalCommand.SetHandler((file, heuristics) => EvalCommand(file, heuristics), evalFileOption, heuristicsOption);
             rootCommand.AddCommand(evalCommand);
+
+            var listHeuristicsCommand = new Command("list-heuristics", "List all available heuristics with their codes and descriptions");
+            evalCommand.AddCommand(listHeuristicsCommand);
+            listHeuristicsCommand.SetHandler(() => ListHeuristicsCommand());
 
             var generateCommand = new Command("generate", "Generate all valid 3x3 puzzle instances using BFS and compress with gzip");
             var outputFileOption = new Option<FileInfo>(
@@ -91,11 +95,23 @@ namespace SlidingTiles
             }
         }
 
-        static int EvalCommand(FileInfo file, string heuristics)
+        static int EvalCommand(FileInfo? file, string? heuristics)
         {
+            if (file == null)
+            {
+                Console.WriteLine("Error: File is required for evaluation. Use --file option or see 'eval list-heuristics' for available heuristics.");
+                return 1;
+            }
+
             if (!file.Exists)
             {
                 Console.WriteLine($"Error: File '{file.FullName}' not found");
+                return 1;
+            }
+
+            if (string.IsNullOrEmpty(heuristics))
+            {
+                Console.WriteLine("Error: Heuristics are required. Use --heuristics option or see 'eval list-heuristics' for available heuristics.");
                 return 1;
             }
 
@@ -129,6 +145,24 @@ namespace SlidingTiles
                 }
             }
             
+            return 0;
+        }
+
+        static int ListHeuristicsCommand()
+        {
+            Console.WriteLine("Available Heuristics:");
+            Console.WriteLine();
+            Console.WriteLine("Code  | Name                                    | Description");
+            Console.WriteLine("------|----------------------------------------|----------------------------------------");
+            Console.WriteLine("hd    | Hamming Distance                       | Counts misplaced tiles");
+            Console.WriteLine("md    | Manhattan Distance                     | Sum of Manhattan distances to goal");
+            Console.WriteLine("mc    | Manhattan + Linear Conflicts          | Manhattan distance with conflict penalties");
+            Console.WriteLine();
+            Console.WriteLine("Usage Examples:");
+            Console.WriteLine("  dotnet run -- eval --file puzzles.puz --heuristics hd,md");
+            Console.WriteLine("  dotnet run -- eval --file puzzles.puz.gz --heuristics hd,md,mc");
+            Console.WriteLine();
+            Console.WriteLine("Note: Use comma-separated list without spaces for multiple heuristics.");
             return 0;
         }
 
