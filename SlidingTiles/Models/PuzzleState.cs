@@ -69,17 +69,5 @@ namespace SlidingTiles
         {
             return position % Width;
         }
-
-        public int GetManhattanDistance(int position, int value)
-        {
-            if (value == 0) return 0; // Empty tile doesn't contribute to distance
-            
-            int targetRow = (value - 1) / Width;
-            int targetCol = (value - 1) % Width;
-            int currentRow = GetRow(position);
-            int currentCol = GetCol(position);
-            
-            return Math.Abs(targetRow - currentRow) + Math.Abs(targetCol - currentCol);
-        }
     }
 }
