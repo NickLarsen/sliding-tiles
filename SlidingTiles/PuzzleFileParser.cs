@@ -21,10 +21,17 @@ namespace SlidingTiles
                 // Skip empty lines
                 if (string.IsNullOrEmpty(line))
                 {
+                    // End of current block if we have one with instances
+                    if (currentBlock != null && currentBlock.Instances.Count > 0)
+                    {
+                        blocks.Add(currentBlock);
+                        currentBlock = null;
+                        currentMetadata = null;
+                    }
                     continue;
                 }
 
-                // Check if this is a metadata section
+                // Check if this is a metadata section (block header)
                 if (line.StartsWith("#"))
                 {
                     // If we have a current block with instances, save it
@@ -78,51 +85,8 @@ namespace SlidingTiles
                     throw new FormatException($"Problem instance found before metadata at line {i + 1}");
                 }
                 
-                // Parse the cell list
-                var cellStrings = line.Split(',');
-                var cells = new int[cellStrings.Length];
-                
-                for (int j = 0; j < cellStrings.Length; j++)
-                {
-                    if (!int.TryParse(cellStrings[j].Trim(), out cells[j]))
-                    {
-                        throw new FormatException($"Invalid cell value at line {i + 1}: {cellStrings[j]}");
-                    }
-                }
-
-                // Parse inline metadata (next line)
-                var instance = new ProblemInstance { Cells = cells };
-                
-                if (i + 1 < lines.Length)
-                {
-                    var nextLine = lines[i + 1].Trim();
-                    if (nextLine.StartsWith("#"))
-                    {
-                        // Parse instance metadata
-                        var metadataPairs = nextLine.Substring(1).Split('|');
-                        foreach (var pair in metadataPairs)
-                        {
-                            var colonIndex = pair.IndexOf(':');
-                            if (colonIndex > 0)
-                            {
-                                var key = pair.Substring(0, colonIndex).Trim();
-                                var value = pair.Substring(colonIndex + 1).Trim();
-                                
-                                switch (key.ToLower())
-                                {
-                                    case "optimal":
-                                        instance.OptimalValue = value;
-                                        break;
-                                    default:
-                                        instance.AdditionalProperties[key] = value;
-                                        break;
-                                }
-                            }
-                        }
-                        i++; // Skip the metadata line in next iteration
-                    }
-                }
-                
+                // Parse the cell list and inline metadata
+                var instance = ParseProblemInstance(line, i + 1);
                 currentBlock.Instances.Add(instance);
             }
 
@@ -133,6 +97,55 @@ namespace SlidingTiles
             }
 
             return blocks;
+        }
+
+        private ProblemInstance ParseProblemInstance(string line, int lineNumber)
+        {
+            // Split on # to separate cells from metadata
+            var parts = line.Split('#', 2);
+            var cellString = parts[0];
+            var metadataString = parts.Length > 1 ? parts[1] : string.Empty;
+            
+            // Parse the cell list
+            var cellStrings = cellString.Split(',');
+            var cells = new int[cellStrings.Length];
+            
+            for (int j = 0; j < cellStrings.Length; j++)
+            {
+                if (!int.TryParse(cellStrings[j].Trim(), out cells[j]))
+                {
+                    throw new FormatException($"Invalid cell value at line {lineNumber}: {cellStrings[j]}");
+                }
+            }
+
+            var instance = new ProblemInstance { Cells = cells };
+            
+            // Parse metadata if present
+            if (!string.IsNullOrEmpty(metadataString))
+            {
+                var metadataPairs = metadataString.Split('|');
+                foreach (var pair in metadataPairs)
+                {
+                    var colonIndex = pair.IndexOf(':');
+                    if (colonIndex > 0)
+                    {
+                        var key = pair.Substring(0, colonIndex).Trim();
+                        var value = pair.Substring(colonIndex + 1).Trim();
+                        
+                        switch (key.ToLower())
+                        {
+                            case "optimal":
+                                instance.OptimalValue = value;
+                                break;
+                            default:
+                                instance.AdditionalProperties[key] = value;
+                                break;
+                        }
+                    }
+                }
+            }
+            
+            return instance;
         }
     }
 }

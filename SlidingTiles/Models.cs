@@ -42,14 +42,19 @@ namespace SlidingTiles
                 }
             }
 
-            if (Width % 2 == 1)
+            if (Width == 2)
+            {
+                // 2x2 puzzles: inversions must be even
+                return inversions % 2 == 0;
+            }
+            else if (Width % 2 == 1)
             {
                 // Odd width: inversions must be even
                 return inversions % 2 == 0;
             }
             else
             {
-                // Even width: inversions + row of empty tile from bottom must be even
+                // Even width ≥ 4: inversions + row of empty tile from bottom must be even
                 int emptyRowFromTop = EmptyPosition / Width;
                 int emptyRowFromBottom = Height - 1 - emptyRowFromTop;
                 return (inversions + emptyRowFromBottom) % 2 == 0;

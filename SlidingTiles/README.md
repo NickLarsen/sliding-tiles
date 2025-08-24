@@ -35,30 +35,21 @@ The tool uses a human-readable text format for puzzle files. Each file contains 
 1. **Metadata Section**: Starts with `#` and contains pipe-separated key-value pairs
    - Required: `width` and `height`
    - Optional: `source` and any other custom properties
-2. **Problem Instances**: Each instance is a comma-separated list of cell values
-3. **Instance Metadata**: Optional metadata for each instance (e.g., optimal solution cost)
+2. **Problem Instances**: Each instance is a comma-separated list of cell values followed by optional metadata
+3. **Instance Metadata**: Optional metadata for each instance (e.g., optimal solution cost) specified on the same line after a `#` character
 
 ### Example File
 
 ```
 #width:3|height:3|source:Example 3x3 Puzzles
-
-1,2,3,4,0,6,7,5,8
-#optimal:1
-
-1,2,3,4,5,6,7,8,0
-#optimal:0
-
-8,7,6,5,4,3,2,1,0
-#optimal:?
+1,2,3,4,0,6,7,5,8#optimal:1
+1,2,3,4,5,6,7,8,0#optimal:0
+8,7,6,5,4,3,2,1,0#optimal:?
 
 #width:4|height:4|source:Example 4x4 Puzzles
-
-1,2,3,4,5,6,7,8,9,10,11,0,13,14,15,12
-#optimal:1
-
-1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0
-#optimal:0
+1,2,3,4,5,6,7,8,9,10,11,0,13,14,15,12#optimal:1
+1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0#optimal:0
+1,2,3,4,5,6,7,8,9,10,11,12,13,14,0,15#optimal:1
 ```
 
 ### Format Rules
@@ -66,7 +57,9 @@ The tool uses a human-readable text format for puzzle files. Each file contains 
 - Cell values must be integers from 0 to (width × height - 1)
 - Value 0 represents the empty tile
 - Each value must appear exactly once
+- Problem instance metadata is specified on the same line after a `#` character
 - Blocks are separated by blank lines
+- No blank lines are needed between problem instances within a block
 - The file must end with a blank line
 - Instance metadata is optional but recommended
 
@@ -74,8 +67,9 @@ The tool uses a human-readable text format for puzzle files. Each file contains 
 
 The tool automatically checks if each puzzle is solvable using the following rules:
 
-- **Odd-width puzzles**: Number of inversions must be even
-- **Even-width puzzles**: (Number of inversions + row of empty tile from bottom) must be even
+- **2×2 puzzles**: Number of inversions must be even
+- **Odd-width puzzles (≥3)**: Number of inversions must be even
+- **Even-width puzzles (≥4)**: (Number of inversions + row of empty tile from bottom) must be even
 
 ## Building and Running
 
