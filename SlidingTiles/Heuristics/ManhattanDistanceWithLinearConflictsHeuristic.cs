@@ -6,6 +6,7 @@ namespace SlidingTiles
     {
         public string Name => "Manhattan Distance with Linear Conflicts";
         public string Abbreviation => "mc";
+        public string Description => "Manhattan distance with conflict penalties";
 
         public int Calculate(PuzzleState state)
         {

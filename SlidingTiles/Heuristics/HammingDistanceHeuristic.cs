@@ -4,6 +4,7 @@ namespace SlidingTiles
     {
         public string Name => "Hamming Distance";
         public string Abbreviation => "hd";
+        public string Description => "Counts misplaced tiles";
 
         public int Calculate(PuzzleState state)
         {

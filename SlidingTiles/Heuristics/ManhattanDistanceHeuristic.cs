@@ -6,6 +6,7 @@ namespace SlidingTiles
     {
         public string Name => "Manhattan Distance";
         public string Abbreviation => "md";
+        public string Description => "Sum of Manhattan distances to goal";
 
         public int Calculate(PuzzleState state)
         {

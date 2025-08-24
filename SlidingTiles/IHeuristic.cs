@@ -4,6 +4,7 @@ namespace SlidingTiles
     {
         string Name { get; }
         string Abbreviation { get; }
+        string Description { get; }
         int Calculate(PuzzleState state);
     }
 }

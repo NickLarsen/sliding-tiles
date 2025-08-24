@@ -27,5 +27,19 @@ namespace SlidingTiles
         {
             return abbreviations.Select(GetHeuristic).ToList();
         }
+
+        public static List<(string Code, string Name, string Description)> GetAvailableHeuristics()
+        {
+            var availableHeuristics = new List<(string Code, string Name, string Description)>();
+            
+            foreach (var kvp in _heuristics)
+            {
+                var code = kvp.Key;
+                var heuristic = kvp.Value;
+                availableHeuristics.Add((code, heuristic.Name, heuristic.Description));
+            }
+            
+            return availableHeuristics;
+        }
     }
 }

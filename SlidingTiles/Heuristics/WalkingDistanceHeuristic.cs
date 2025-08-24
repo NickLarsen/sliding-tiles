@@ -6,6 +6,7 @@ namespace SlidingTiles
     {
         public string Name => "Walking Distance";
         public string Abbreviation => "wd";
+        public string Description => "Walking distance heuristic for sliding puzzles";
 
         public int Calculate(PuzzleState state)
         {
