@@ -16,10 +16,6 @@ bld/
 
 # Generated puzzle files (large files that shouldn't be tracked)
 all_valid_3x3_puzzles.puz
-all_valid_3x3_puzzles.puz.gz
-*.puz.gz
-comprehensive_3x3_puzzles.puz
-comprehensive_3x3_puzzles.puz.gz
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
