@@ -37,8 +37,9 @@ namespace SlidingTiles.Commands
             Console.WriteLine("Usage Examples:");
             var codes = string.Join(",", availableHeuristics.Select(h => h.Code));
             Console.WriteLine($"  dotnet run -- eval --file puzzles.puz --heuristics {codes}");
+            Console.WriteLine($"  dotnet run -- eval --file puzzles.puz --heuristics all");
             Console.WriteLine();
-            Console.WriteLine("Note: Use comma-separated list without spaces for multiple heuristics.");
+            Console.WriteLine("Note: Use comma-separated list without spaces for multiple heuristics, or 'all' for all heuristics.");
             return 0;
         }
 

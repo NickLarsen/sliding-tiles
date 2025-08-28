@@ -41,6 +41,13 @@ namespace SlidingTiles.Commands
             var evaluator = new PuzzleEvaluator();
             var heuristicList = _heuristics.Split(',').Select(h => h.Trim().ToLower()).ToList();
             
+            // Handle special "all" value - expand to all available heuristics
+            if (heuristicList.Contains("all"))
+            {
+                var availableHeuristics = HeuristicFactory.GetAvailableHeuristics();
+                heuristicList = availableHeuristics.Select(h => h.Code).ToList();
+            }
+            
             var result = evaluator.EvaluateFile(_file.FullName, heuristicList);
             
             Console.WriteLine($"Evaluation Results for '{_file.FullName}':");

@@ -30,7 +30,7 @@ namespace SlidingTiles.Commands
             };
             var heuristicsOption = new Option<string>(
                 "--heuristics",
-                "Comma-separated list of heuristic abbreviations (hd, md, mc)")
+                "Comma-separated list of heuristic abbreviations or 'all' for all heuristics")
             {
                 IsRequired = false
             };
