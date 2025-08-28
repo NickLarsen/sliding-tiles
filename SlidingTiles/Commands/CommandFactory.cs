@@ -34,9 +34,16 @@ namespace SlidingTiles.Commands
             {
                 IsRequired = false
             };
+            var outputOption = new Option<FileInfo?>(
+                "--output",
+                "Optional output CSV file to write results (if not provided, results are only displayed)")
+            {
+                IsRequired = false
+            };
             evalCommand.AddOption(evalFileOption);
             evalCommand.AddOption(heuristicsOption);
-            evalCommand.SetHandler((file, heuristics) => new EvalCommand(file, heuristics).Execute(), evalFileOption, heuristicsOption);
+            evalCommand.AddOption(outputOption);
+            evalCommand.SetHandler((file, heuristics, output) => new EvalCommand(file, heuristics, output).Execute(), evalFileOption, heuristicsOption, outputOption);
             return evalCommand;
         }
 
