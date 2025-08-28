@@ -27,6 +27,8 @@ namespace SlidingTiles
             var generateCommand = CommandFactory.CreateGenerateCommand();
             rootCommand.AddCommand(generateCommand);
 
+
+
             return rootCommand.Invoke(args);
         }
     }
