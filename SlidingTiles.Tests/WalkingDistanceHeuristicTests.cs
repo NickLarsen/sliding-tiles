@@ -1,16 +1,15 @@
 using Xunit;
-using SlidingTiles;
 
 namespace SlidingTiles.Tests
 {
     public class WalkingDistanceHeuristicTests
     {
-        private readonly WalkingDistanceHeuristic _heuristic;
-
-        public WalkingDistanceHeuristicTests()
-        {
-            _heuristic = new WalkingDistanceHeuristic();
-        }
+        private Dictionary<int, WalkingDistanceHeuristic> _heuristics = new Dictionary<int, WalkingDistanceHeuristic> {
+            { 2, new WalkingDistanceHeuristic(2, 2) },
+            { 3, new WalkingDistanceHeuristic(3, 3) },
+            { 4, new WalkingDistanceHeuristic(4, 4) },
+            //{ 5, new WalkingDistanceHeuristic(5, 5) }, // takes too long to calculate
+        };
 
         [Fact]
         public void Calculate_GoalState_ShouldReturnZero()
@@ -24,7 +23,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(goalState);
+            var heuristic = _heuristics[goalState.Width];
+            var result = heuristic.Calculate(goalState);
 
             // Assert
             Assert.Equal(0, result);
@@ -42,7 +42,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(oneMoveState);
+            var heuristic = _heuristics[oneMoveState.Width];
+            var result = heuristic.Calculate(oneMoveState);
 
             // Assert
             Assert.Equal(1, result);
@@ -60,10 +61,11 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(scrambledState);
+            var heuristic = _heuristics[scrambledState.Width];
+            var result = heuristic.Calculate(scrambledState);
 
             // Assert
-            Assert.Equal(2, result);
+            Assert.Equal(4, result);
         }
 
         [Fact]
@@ -77,7 +79,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(goalState);
+            var heuristic = _heuristics[goalState.Width];
+            var result = heuristic.Calculate(goalState);
 
             // Assert
             Assert.Equal(0, result);
@@ -94,7 +97,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(scrambledState);
+            var heuristic = _heuristics[scrambledState.Width];
+            var result = heuristic.Calculate(scrambledState);
 
             // Assert
             Assert.Equal(2, result);
@@ -112,7 +116,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(scrambledState);
+            var heuristic = _heuristics[scrambledState.Width];
+            var result = heuristic.Calculate(scrambledState);
 
             // Assert
             Assert.Equal(10, result);
@@ -130,7 +135,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(middleEmptyState);
+            var heuristic = _heuristics[middleEmptyState.Width];
+            var result = heuristic.Calculate(middleEmptyState);
 
             // Assert
             Assert.Equal(2, result);
@@ -148,10 +154,11 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(allOutOfPlaceState);
+            var heuristic = _heuristics[allOutOfPlaceState.Width];
+            var result = heuristic.Calculate(allOutOfPlaceState);
 
             // Assert
-            Assert.Equal(16, result);
+            Assert.Equal(22, result);
         }
 
         [Fact]
@@ -166,7 +173,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(simpleSwapState);
+            var heuristic = _heuristics[simpleSwapState.Width];
+            var result = heuristic.Calculate(simpleSwapState);
 
             // Assert
             Assert.Equal(1, result);
@@ -184,10 +192,11 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(crossPatternState);
+            var heuristic = _heuristics[crossPatternState.Width];
+            var result = heuristic.Calculate(crossPatternState);
 
             // Assert
-            Assert.Equal(4, result);
+            Assert.Equal(12, result);
         }
 
         [Fact]
@@ -203,7 +212,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(goalState);
+            var heuristic = _heuristics[goalState.Width];
+            var result = heuristic.Calculate(goalState);
 
             // Assert
             Assert.Equal(0, result);
@@ -222,7 +232,8 @@ namespace SlidingTiles.Tests
             });
 
             // Act
-            var result = _heuristic.Calculate(scrambledState);
+            var heuristic = _heuristics[scrambledState.Width];
+            var result = heuristic.Calculate(scrambledState);
 
             // Assert
             Assert.Equal(1, result);
@@ -242,11 +253,12 @@ namespace SlidingTiles.Tests
             // Act & Assert
             foreach (var state in testStates)
             {
-                var walkingDistance = _heuristic.Calculate(state);
-                
+                var heuristic = _heuristics[state.Width];
+                var walkingDistance = heuristic.Calculate(state);
+
                 // Walking distance should be non-negative
                 Assert.True(walkingDistance >= 0, $"Walking distance should be non-negative, got {walkingDistance}");
-                
+
                 // Walking distance should be reasonable (not excessively high)
                 Assert.True(walkingDistance <= 20, $"Walking distance should be reasonable, got {walkingDistance}");
             }
@@ -262,19 +274,30 @@ namespace SlidingTiles.Tests
             var twoMovesAway = new PuzzleState(3, 3, new int[] { 1, 2, 3, 4, 5, 0, 7, 8, 6 });
 
             // Act
-            var goalValue = _heuristic.Calculate(goalState);
-            var oneMoveValue = _heuristic.Calculate(oneMoveAway);
-            var twoMovesValue = _heuristic.Calculate(twoMovesAway);
+            var heuristic = _heuristics[goalState.Width];
+            var goalValue = heuristic.Calculate(goalState);
+            var oneMoveValue = heuristic.Calculate(oneMoveAway);
+            var twoMovesValue = heuristic.Calculate(twoMovesAway);
 
             // Assert
             // Goal state should have lowest value
             Assert.Equal(0, goalValue);
-            
+
             // One move away should have higher value than goal
             Assert.True(oneMoveValue > goalValue, "One move away should have higher heuristic than goal");
-            
+
             // Two moves away should have higher or equal value than one move away
             Assert.True(twoMovesValue >= oneMoveValue, "Two moves away should have higher or equal heuristic than one move away");
+        }
+
+        [Fact]
+        public void Test_MaxValue()
+        {
+            foreach (var (size, heuristic) in _heuristics)
+            {
+                var max = heuristic.MaxHeuristicValue;
+                Console.WriteLine($"{size}: {max}");
+            }
         }
     }
 }

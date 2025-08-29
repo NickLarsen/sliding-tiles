@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 
 namespace SlidingTiles
 {
@@ -10,239 +8,176 @@ namespace SlidingTiles
         public string Abbreviation => "wd";
         public string Description => "Walking distance heuristic for sliding puzzles using precomputed walking distance database";
 
-        private readonly Dictionary<string, int> _walkingDistanceDatabase;
+        private readonly IDictionary<string, int> _walkingDistanceDatabase;
         private readonly int _width;
         private readonly int _height;
 
+        public int MaxHeuristicValue => _walkingDistanceDatabase.Values.Max();
+
         public WalkingDistanceHeuristic(int width = 3, int height = 3)
         {
+            if (width != height)
+            {
+                // for now just support square puzzles
+                throw new ArgumentException("Width and height must be equal");
+            }
             _width = width;
             _height = height;
-            _walkingDistanceDatabase = new Dictionary<string, int>();
-            BuildWalkingDistanceDatabase();
-        }
-
-        private void BuildWalkingDistanceDatabase()
-        {
-            // Create goal walking distance state
-            var goalWDState = CreateGoalWalkingDistanceState();
-            var goalWDString = WalkingDistanceStateToString(goalWDState);
-
-            // Initialize BFS
-            var queue = new Queue<(WalkingDistanceState state, int cost)>();
-            var visited = new HashSet<string>();
-
-            queue.Enqueue((goalWDState, 0));
-            visited.Add(goalWDString);
-            _walkingDistanceDatabase[goalWDString] = 0;
-
-            while (queue.Count > 0)
-            {
-                var (currentWDState, currentCost) = queue.Dequeue();
-
-                // Generate all possible moves from current walking distance state
-                var neighbors = GetNeighborWalkingDistanceStates(currentWDState);
-
-                foreach (var neighborWDState in neighbors)
-                {
-                    var neighborWDString = WalkingDistanceStateToString(neighborWDState);
-
-                    if (!visited.Contains(neighborWDString))
-                    {
-                        visited.Add(neighborWDString);
-                        var newCost = currentCost + 1;
-                        _walkingDistanceDatabase[neighborWDString] = newCost;
-                        queue.Enqueue((neighborWDState, newCost));
-                    }
-                }
-            }
-        }
-
-        private WalkingDistanceState CreateGoalWalkingDistanceState()
-        {
-            var rowPatterns = new int[_height];
-            var colPatterns = new int[_width];
-
-            // In goal state, each row and column has tiles in correct order
-            for (int i = 0; i < _height; i++)
-            {
-                rowPatterns[i] = i; // Row i contains tiles from row i
-            }
-            for (int j = 0; j < _width; j++)
-            {
-                colPatterns[j] = j; // Column j contains tiles from column j
-            }
-
-            return new WalkingDistanceState { RowPatterns = rowPatterns, ColPatterns = colPatterns };
-        }
-
-        private List<WalkingDistanceState> GetNeighborWalkingDistanceStates(WalkingDistanceState currentState)
-        {
-            var neighbors = new List<WalkingDistanceState>();
-
-            // Try all possible row swaps
-            for (int i = 0; i < _height; i++)
-            {
-                for (int j = i + 1; j < _height; j++)
-                {
-                    var newState = new WalkingDistanceState
-                    {
-                        RowPatterns = (int[])currentState.RowPatterns.Clone(),
-                        ColPatterns = (int[])currentState.ColPatterns.Clone()
-                    };
-
-                    // Swap row patterns
-                    var temp = newState.RowPatterns[i];
-                    newState.RowPatterns[i] = newState.RowPatterns[j];
-                    newState.RowPatterns[j] = temp;
-
-                    neighbors.Add(newState);
-                }
-            }
-
-            // Try all possible column swaps
-            for (int i = 0; i < _width; i++)
-            {
-                for (int j = i + 1; j < _width; j++)
-                {
-                    var newState = new WalkingDistanceState
-                    {
-                        RowPatterns = (int[])currentState.RowPatterns.Clone(),
-                        ColPatterns = (int[])currentState.ColPatterns.Clone()
-                    };
-
-                    // Swap column patterns
-                    var temp = newState.ColPatterns[i];
-                    newState.ColPatterns[i] = newState.ColPatterns[j];
-                    newState.ColPatterns[j] = temp;
-
-                    neighbors.Add(newState);
-                }
-            }
-
-            return neighbors;
-        }
-
-        private string WalkingDistanceStateToString(WalkingDistanceState wdState)
-        {
-            var rowStr = string.Join(",", wdState.RowPatterns);
-            var colStr = string.Join(",", wdState.ColPatterns);
-            return $"R:{rowStr}|C:{colStr}";
+            _walkingDistanceDatabase = BuildWalkingDistanceDatabase(width);
         }
 
         public int Calculate(PuzzleState state)
         {
-            // Convert PuzzleState to WalkingDistanceState
-            var wdState = ConvertToWalkingDistanceState(state);
-            var wdString = WalkingDistanceStateToString(wdState);
+            // row-wise walking distance
+            var rowWdState = ConvertToWalkingDistanceState(state, Direction.Row);
+            var rowWdString = WalkingDistanceStateToString(rowWdState);
+            var rowWd = _walkingDistanceDatabase[rowWdString];
 
-            if (_walkingDistanceDatabase.TryGetValue(wdString, out int cost))
-            {
-                return cost;
-            }
+            // column-wise walking distance
+            var colWdState = ConvertToWalkingDistanceState(state, Direction.Column);
+            var colWdString = WalkingDistanceStateToString(colWdState);
+            var colWd = _walkingDistanceDatabase[colWdString];
 
-            // If walking distance state not found, fall back to Manhattan distance
-            return CalculateFallbackHeuristic(state);
+            // return the sum of the two
+            return rowWd + colWd;
         }
 
-        private WalkingDistanceState ConvertToWalkingDistanceState(PuzzleState state)
+        private int[,] ConvertToWalkingDistanceState(PuzzleState state, Direction direction)
         {
-            var rowPatterns = new int[state.Height];
-            var colPatterns = new int[state.Width];
-
-            // Calculate row patterns
-            for (int row = 0; row < state.Height; row++)
+            var result = new int[_width, _width];
+            for (int actualRow = 0; actualRow < state.Height; actualRow++)
             {
-                var rowTiles = new List<int>();
-                for (int col = 0; col < state.Width; col++)
+                for (int actualCol = 0; actualCol < state.Width; actualCol++)
                 {
-                    int index = row * state.Width + col;
-                    if (state.Cells[index] != 0) // Skip empty tile
+                    int actualLocation = actualRow * state.Width + actualCol;
+                    // the real thing we want here is the number of the tile minus 1
+                    // but the blank (0) needs to be at the end
+                    // we ignore the blank because it's not tracked explicitly
+                    int tileDesiredLocation = state.Cells[actualLocation] - 1;
+                    if (tileDesiredLocation < 0)
                     {
-                        rowTiles.Add(state.Cells[index]);
+                        continue;
                     }
-                }
-                rowPatterns[row] = GetRowPattern(rowTiles);
-            }
-
-            // Calculate column patterns
-            for (int col = 0; col < state.Width; col++)
-            {
-                var colTiles = new List<int>();
-                for (int row = 0; row < state.Height; row++)
-                {
-                    int index = row * state.Width + col;
-                    if (state.Cells[index] != 0) // Skip empty tile
+                    int desiredRow = tileDesiredLocation / state.Width;
+                    int desiredCol = tileDesiredLocation % state.Width;
+                    if (direction == Direction.Row)
                     {
-                        colTiles.Add(state.Cells[index]);
+                        result[actualRow, desiredRow]++;
                     }
-                }
-                colPatterns[col] = GetColumnPattern(colTiles);
-            }
-
-            return new WalkingDistanceState { RowPatterns = rowPatterns, ColPatterns = colPatterns };
-        }
-
-        private int GetRowPattern(List<int> tiles)
-        {
-            // Create a pattern representing the relative order of tiles in this row
-            // This is a simplified approach - in practice, you'd want a more sophisticated pattern representation
-            var sortedTiles = tiles.OrderBy(x => x).ToList();
-            var pattern = 0;
-            
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                var targetIndex = sortedTiles.IndexOf(tiles[i]);
-                pattern = pattern * 10 + targetIndex;
-            }
-            
-            return pattern;
-        }
-
-        private int GetColumnPattern(List<int> tiles)
-        {
-            // Similar to row pattern but for columns
-            var sortedTiles = tiles.OrderBy(x => x).ToList();
-            var pattern = 0;
-            
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                var targetIndex = sortedTiles.IndexOf(tiles[i]);
-                pattern = pattern * 10 + targetIndex;
-            }
-            
-            return pattern;
-        }
-
-        private int CalculateFallbackHeuristic(PuzzleState state)
-        {
-            // Simple Manhattan distance as fallback
-            int totalDistance = 0;
-            for (int i = 0; i < state.Cells.Length; i++)
-            {
-                if (state.Cells[i] != 0) // Skip empty tile
-                {
-                    var currentRow = i / state.Width;
-                    var currentCol = i % state.Width;
-                    
-                    var targetValue = state.Cells[i];
-                    var targetIndex = targetValue - 1;
-                    if (targetIndex >= 0 && targetIndex < state.Cells.Length - 1)
+                    else if (direction == Direction.Column)
                     {
-                        var targetRow = targetIndex / state.Width;
-                        var targetCol = targetIndex % state.Width;
-                        
-                        totalDistance += Math.Abs(currentRow - targetRow) + Math.Abs(currentCol - targetCol);
+                        result[actualCol, desiredCol]++;
                     }
                 }
             }
-            return totalDistance;
+            return result;
         }
-    }
 
-    public class WalkingDistanceState
-    {
-        public int[] RowPatterns { get; set; } = new int[0];
-        public int[] ColPatterns { get; set; } = new int[0];
+        private string WalkingDistanceStateToString(int[,] state)
+        {
+            var sb = new StringBuilder();
+            for (int i = 0; i < state.GetLength(0); i++)
+            {
+                for (int j = 0; j < state.GetLength(1); j++)
+                {
+                    sb.Append(state[i, j]);
+                }
+            }
+            return sb.ToString();
+        }
+
+        private IDictionary<string, int> BuildWalkingDistanceDatabase(int width)
+        {
+            var database = new Dictionary<string, int>();
+
+            var state = BuildGoalWalkingDistanceState(width);
+            var queue = new Queue<(int[,] state, int distance)>();
+            queue.Enqueue((state, 0));
+            while (queue.Count > 0)
+            {
+                // add the state to the database
+                var (currentState, distance) = queue.Dequeue();
+                var stateString = WalkingDistanceStateToString(currentState);
+                if (database.ContainsKey(stateString))
+                {
+                    // state already visited so bail because we have already
+                    // found the shortest step path to it
+                    continue;
+                }
+                database[stateString] = distance;
+
+                // find which row the blank is on
+                var blankRow = -1;
+                for (int row = 0; row < _height; row++)
+                {
+                    int tileCount = 0;
+                    for (int col = 0; col < width; col++)
+                    {
+                        tileCount += currentState[row, col];
+                    }
+                    if (tileCount == (_width - 1))
+                    {
+                        blankRow = row;
+                        break;
+                    }
+                }
+                if (blankRow == -1)
+                {
+                    var e = new Exception("blank row was -1, should not happen");
+                    e.Data.Add("state", stateString);
+                    throw e;
+                }
+
+                // try to move the blank up
+                int upRow = blankRow + 1;
+                if (upRow < _height)
+                {
+                    for (int col = 0; col < _width; col++)
+                    {
+                        if (currentState[upRow, col] > 0)
+                        {
+                            int[,] newState = (int[,])currentState.Clone();
+                            newState[blankRow, col] += 1;
+                            newState[upRow, col] -= 1;
+                            queue.Enqueue((newState, distance + 1));
+                        }
+                    }
+                }
+
+                // try to move the bank down
+                int downRow = blankRow - 1;
+                if (downRow >= 0)
+                {
+                    for (int col = 0; col < _width; col++)
+                    {
+                        if (currentState[downRow, col] > 0)
+                        {
+                            int[,] newState = (int[,])currentState.Clone();
+                            newState[blankRow, col] += 1;
+                            newState[downRow, col] -= 1;
+                            queue.Enqueue((newState, distance + 1));
+                        }
+                    }
+                }
+            }
+            return database;
+        }
+
+        private int[,] BuildGoalWalkingDistanceState(int width)
+        {
+            var state = new int[width, width];
+            for (int i = 0; i < width; i++)
+            {
+                state[i, i] = width;
+            }
+            state[width - 1, width - 1] = width - 1;
+            return state;
+        }
+
+        enum Direction
+        {
+            Row,
+            Column,
+        }
     }
 }
