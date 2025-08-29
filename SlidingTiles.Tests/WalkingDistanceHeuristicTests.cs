@@ -289,15 +289,5 @@ namespace SlidingTiles.Tests
             // Two moves away should have higher or equal value than one move away
             Assert.True(twoMovesValue >= oneMoveValue, "Two moves away should have higher or equal heuristic than one move away");
         }
-
-        [Fact]
-        public void Test_MaxValue()
-        {
-            foreach (var (size, heuristic) in _heuristics)
-            {
-                var max = heuristic.MaxHeuristicValue;
-                Console.WriteLine($"{size}: {max}");
-            }
-        }
     }
 }
