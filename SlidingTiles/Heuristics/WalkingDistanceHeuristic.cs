@@ -13,6 +13,7 @@ namespace SlidingTiles
         private readonly int _height;
 
         public int MaxHeuristicValue => _walkingDistanceDatabase.Values.Max();
+        public int DatabaseSize => _walkingDistanceDatabase.Count;
 
         public WalkingDistanceHeuristic(int width = 3, int height = 3)
         {

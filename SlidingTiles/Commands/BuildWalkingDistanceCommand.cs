@@ -37,7 +37,7 @@ namespace SlidingTiles.Commands
                 Console.WriteLine();
                 Console.WriteLine("Database Statistics:");
                 Console.WriteLine($"  Size: {_size}x{_size}");
-                Console.WriteLine($"  Database entries: {heuristic.MaxHeuristicValue + 1}");
+                Console.WriteLine($"  Database entries: {heuristic.DatabaseSize + 1}");
                 Console.WriteLine($"  Max heuristic value: {heuristic.MaxHeuristicValue}");
                 Console.WriteLine($"  Build time: {stopwatch.ElapsedMilliseconds}ms");
                 Console.WriteLine();
