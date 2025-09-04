@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic; // Added for Dictionary
 using SlidingTiles.Commands;
+using Microsoft.Extensions.Logging;
 
 namespace SlidingTiles
 {
@@ -12,6 +13,17 @@ namespace SlidingTiles
     {
         static int Main(string[] args)
         {
+            // Set up logging
+            using var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                    .SetMinimumLevel(LogLevel.Debug)
+                    .AddConsole();
+            });
+
+            // Initialize the heuristic factory with logging
+            HeuristicFactory.Initialize(loggerFactory);
+
             var rootCommand = new RootCommand("Sliding Tiles Puzzle Tool");
 
             // Create and add all commands using the factory

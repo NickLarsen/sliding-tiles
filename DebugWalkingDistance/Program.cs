@@ -1,5 +1,6 @@
 using System;
 using SlidingTiles;
+using Microsoft.Extensions.Logging;
 
 namespace DebugWalkingDistance
 {
@@ -9,7 +10,13 @@ namespace DebugWalkingDistance
         {
             Console.WriteLine("Testing Walking Distance Heuristic...");
             
-            var heuristic = new WalkingDistanceHeuristic();
+            // Create a logger factory
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug);
+            });
+            
+            var heuristic = new WalkingDistanceHeuristic(loggerFactory.CreateLogger<WalkingDistanceHeuristic>());
             
             // Test case 1: Goal state (should return 0)
             var goalState = new PuzzleState(3, 3, new int[]

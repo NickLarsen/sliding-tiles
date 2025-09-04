@@ -1,5 +1,6 @@
 using System;
 using SlidingTiles;
+using Microsoft.Extensions.Logging;
 
 namespace ExactValueTest
 {
@@ -9,7 +10,13 @@ namespace ExactValueTest
         {
             Console.WriteLine("Testing exact walking distance values...");
             
-            var heuristic = new WalkingDistanceHeuristic();
+            // Create a logger factory
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug);
+            });
+            
+            var heuristic = new WalkingDistanceHeuristic(loggerFactory.CreateLogger<WalkingDistanceHeuristic>());
             
             // Test 2x2 scrambled state
             var scrambled2x2 = new PuzzleState(2, 2, new int[]

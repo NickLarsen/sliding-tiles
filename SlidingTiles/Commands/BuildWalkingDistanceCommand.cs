@@ -30,15 +30,23 @@ namespace SlidingTiles.Commands
             
             try
             {
-                var heuristic = new WalkingDistanceHeuristic(_size, _size);
+                var heuristic = HeuristicFactory.GetHeuristic("wd", _size, _size);
                 stopwatch.Stop();
+
+                // Cast to WalkingDistanceHeuristic to access database properties
+                var walkingDistanceHeuristic = heuristic as WalkingDistanceHeuristic;
+                if (walkingDistanceHeuristic == null)
+                {
+                    Console.WriteLine("❌ Error: Failed to create WalkingDistanceHeuristic");
+                    return 1;
+                }
 
                 Console.WriteLine($"✅ Successfully built WalkingDistanceHeuristic for {_size}x{_size} puzzles");
                 Console.WriteLine();
                 Console.WriteLine("Database Statistics:");
                 Console.WriteLine($"  Size: {_size}x{_size}");
-                Console.WriteLine($"  Database entries: {heuristic.DatabaseSize + 1}");
-                Console.WriteLine($"  Max heuristic value: {heuristic.MaxHeuristicValue}");
+                Console.WriteLine($"  Database entries: {walkingDistanceHeuristic.DatabaseSize + 1}");
+                Console.WriteLine($"  Max heuristic value: {walkingDistanceHeuristic.MaxHeuristicValue}");
                 Console.WriteLine($"  Build time: {stopwatch.ElapsedMilliseconds}ms");
                 Console.WriteLine();
                 Console.WriteLine("Heuristic Information:");

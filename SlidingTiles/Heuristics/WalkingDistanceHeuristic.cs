@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace SlidingTiles
 {
@@ -11,11 +12,12 @@ namespace SlidingTiles
         private readonly IDictionary<string, int> _walkingDistanceDatabase;
         private readonly int _width;
         private readonly int _height;
+        private readonly ILogger<WalkingDistanceHeuristic> _logger;
 
         public int MaxHeuristicValue => _walkingDistanceDatabase.Values.Max();
         public int DatabaseSize => _walkingDistanceDatabase.Count;
 
-        public WalkingDistanceHeuristic(int width = 3, int height = 3)
+        public WalkingDistanceHeuristic(ILogger<WalkingDistanceHeuristic> logger, int width = 3, int height = 3)
         {
             if (width != height)
             {
@@ -24,6 +26,7 @@ namespace SlidingTiles
             }
             _width = width;
             _height = height;
+            _logger = logger;
             _walkingDistanceDatabase = BuildWalkingDistanceDatabase(width);
         }
 
@@ -95,10 +98,27 @@ namespace SlidingTiles
             var state = BuildGoalWalkingDistanceState(width);
             var queue = new Queue<(int[,] state, int distance)>();
             queue.Enqueue((state, 0));
+            
+            int currentLevel = 0;
+            int nodesAtCurrentLevel = 0;
+            int totalNodesProcessed = 0;
+            
             while (queue.Count > 0)
             {
                 // add the state to the database
                 var (currentState, distance) = queue.Dequeue();
+                
+                // Check if we've moved to a new level
+                if (distance > currentLevel)
+                {
+                    _logger.LogDebug("Level {Level}: {NodeCount} nodes evaluated", currentLevel, nodesAtCurrentLevel);
+                    currentLevel = distance;
+                    nodesAtCurrentLevel = 0;
+                }
+                
+                nodesAtCurrentLevel++;
+                totalNodesProcessed++;
+                
                 var stateString = WalkingDistanceStateToString(currentState);
                 if (database.ContainsKey(stateString))
                 {
@@ -170,6 +190,11 @@ namespace SlidingTiles
                     }
                 }
             }
+            
+            // Log the final level and total statistics
+            _logger.LogDebug("Level {Level}: {NodeCount} nodes evaluated", currentLevel, nodesAtCurrentLevel);
+            _logger.LogDebug("Total nodes processed: {TotalNodes}", totalNodesProcessed);
+            
             return database;
         }
 

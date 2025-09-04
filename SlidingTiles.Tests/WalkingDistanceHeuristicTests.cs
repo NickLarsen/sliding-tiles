@@ -1,15 +1,27 @@
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace SlidingTiles.Tests
 {
     public class WalkingDistanceHeuristicTests
     {
-        private Dictionary<int, WalkingDistanceHeuristic> _heuristics = new Dictionary<int, WalkingDistanceHeuristic> {
-            { 2, new WalkingDistanceHeuristic(2, 2) },
-            { 3, new WalkingDistanceHeuristic(3, 3) },
-            { 4, new WalkingDistanceHeuristic(4, 4) },
-            //{ 5, new WalkingDistanceHeuristic(5, 5) }, // takes too long to calculate
-        };
+        private Dictionary<int, WalkingDistanceHeuristic> _heuristics;
+
+        public WalkingDistanceHeuristicTests()
+        {
+            // Create a logger factory for testing
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Debug);
+            });
+
+            _heuristics = new Dictionary<int, WalkingDistanceHeuristic> {
+                { 2, new WalkingDistanceHeuristic(loggerFactory.CreateLogger<WalkingDistanceHeuristic>(), 2, 2) },
+                { 3, new WalkingDistanceHeuristic(loggerFactory.CreateLogger<WalkingDistanceHeuristic>(), 3, 3) },
+                { 4, new WalkingDistanceHeuristic(loggerFactory.CreateLogger<WalkingDistanceHeuristic>(), 4, 4) },
+                //{ 5, new WalkingDistanceHeuristic(loggerFactory.CreateLogger<WalkingDistanceHeuristic>(), 5, 5) }, // takes too long to calculate
+            };
+        }
 
         [Fact]
         public void Calculate_GoalState_ShouldReturnZero()
