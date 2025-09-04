@@ -104,24 +104,8 @@ namespace SlidingTiles
             int initialCapacity = Convert.ToInt32(Math.Pow(10, width));
             var database = new Dictionary<string, byte>(initialCapacity);
 
-            var state = BuildGoalWalkingDistanceState(width);
+            var (state, initialBlankRow) = BuildGoalWalkingDistanceState(width);
             var queue = new Queue<(int[,] state, byte distance, byte blankRow)>();
-            
-            // Calculate initial blank row position
-            byte initialBlankRow = 0;
-            for (int row = 0; row < width; row++)
-            {
-                int tileCount = 0;
-                for (int col = 0; col < width; col++)
-                {
-                    tileCount += state[row, col];
-                }
-                if (tileCount == (width - 1))
-                {
-                    initialBlankRow = (byte)row;
-                    break;
-                }
-            }
             
             queue.Enqueue((state, 0, initialBlankRow));
             
@@ -202,7 +186,7 @@ namespace SlidingTiles
             return database;
         }
 
-        private int[,] BuildGoalWalkingDistanceState(int width)
+        private (int[,] state, byte initialBlankRow) BuildGoalWalkingDistanceState(int width)
         {
             var state = new int[width, width];
             for (int i = 0; i < width; i++)
@@ -210,7 +194,7 @@ namespace SlidingTiles
                 state[i, i] = width;
             }
             state[width - 1, width - 1] = width - 1;
-            return state;
+            return (state, (byte)(width - 1));
         }
 
         enum Direction
