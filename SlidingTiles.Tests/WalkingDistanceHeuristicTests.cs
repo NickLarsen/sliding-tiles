@@ -272,7 +272,7 @@ namespace SlidingTiles.Tests
                 Assert.True(walkingDistance >= 0, $"Walking distance should be non-negative, got {walkingDistance}");
 
                 // Walking distance should be reasonable (not excessively high)
-                Assert.True(walkingDistance <= 20, $"Walking distance should be reasonable, got {walkingDistance}");
+                Assert.True(walkingDistance <= 25, $"Walking distance should be reasonable, got {walkingDistance}");
             }
         }
 

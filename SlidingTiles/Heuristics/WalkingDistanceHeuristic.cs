@@ -9,7 +9,7 @@ namespace SlidingTiles
         public string Abbreviation => "wd";
         public string Description => "Walking distance heuristic for sliding puzzles using precomputed walking distance database";
 
-        private readonly IDictionary<string, int> _walkingDistanceDatabase;
+        private readonly IDictionary<string, byte> _walkingDistanceDatabase;
         private readonly int _width;
         private readonly int _height;
         private readonly ILogger<WalkingDistanceHeuristic> _logger;
@@ -24,6 +24,15 @@ namespace SlidingTiles
                 // for now just support square puzzles
                 throw new ArgumentException("Width and height must be equal");
             }
+            
+            // Validate that the puzzle size won't exceed byte limits
+            // For walking distance, the maximum value in any cell is 'width'
+            // and the maximum distance should be reasonable for byte storage
+            if (width > 255)
+            {
+                throw new ArgumentException("Width cannot exceed 255 due to byte storage limitations");
+            }
+            
             _width = width;
             _height = height;
             _logger = logger;
@@ -90,13 +99,13 @@ namespace SlidingTiles
             return sb.ToString();
         }
 
-        private IDictionary<string, int> BuildWalkingDistanceDatabase(int width)
+        private IDictionary<string, byte> BuildWalkingDistanceDatabase(int width)
         {
             int initialCapacity = Convert.ToInt32(Math.Pow(10, width));
-            var database = new Dictionary<string, int>(initialCapacity);
+            var database = new Dictionary<string, byte>(initialCapacity);
 
             var state = BuildGoalWalkingDistanceState(width);
-            var queue = new Queue<(int[,] state, int distance)>();
+            var queue = new Queue<(int[,] state, byte distance)>();
             queue.Enqueue((state, 0));
             
             int currentLevel = 0;
@@ -164,7 +173,7 @@ namespace SlidingTiles
                             var newStateString = WalkingDistanceStateToString(newState);
                             if (!database.ContainsKey(newStateString))
                             {
-                                queue.Enqueue((newState, distance + 1));
+                                queue.Enqueue((newState, (byte)(distance + 1)));
                             }
                         }
                     }
@@ -184,7 +193,7 @@ namespace SlidingTiles
                             var newStateString = WalkingDistanceStateToString(newState);
                             if (!database.ContainsKey(newStateString))
                             {
-                                queue.Enqueue((newState, distance + 1));
+                                queue.Enqueue((newState, (byte)(distance + 1)));
                             }
                         }
                     }
