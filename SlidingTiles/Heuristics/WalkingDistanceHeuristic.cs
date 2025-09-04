@@ -55,9 +55,9 @@ namespace SlidingTiles
             return rowWd + colWd;
         }
 
-        private int[,] ConvertToWalkingDistanceState(PuzzleState state, Direction direction)
+        private byte[,] ConvertToWalkingDistanceState(PuzzleState state, Direction direction)
         {
-            var result = new int[_width, _width];
+            var result = new byte[_width, _width];
             for (int actualRow = 0; actualRow < state.Height; actualRow++)
             {
                 for (int actualCol = 0; actualCol < state.Width; actualCol++)
@@ -86,7 +86,7 @@ namespace SlidingTiles
             return result;
         }
 
-        private string WalkingDistanceStateToString(int[,] state)
+        private string WalkingDistanceStateToString(byte[,] state)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < state.GetLength(0); i++)
@@ -105,7 +105,7 @@ namespace SlidingTiles
             var database = new Dictionary<string, byte>(initialCapacity);
 
             var (state, initialBlankRow) = BuildGoalWalkingDistanceState(width);
-            var queue = new Queue<(int[,] state, byte distance, byte blankRow)>();
+            var queue = new Queue<(byte[,] state, byte distance, byte blankRow)>();
             
             queue.Enqueue((state, 0, initialBlankRow));
             
@@ -146,7 +146,7 @@ namespace SlidingTiles
                     {
                         if (currentState[upRow, col] > 0)
                         {
-                            int[,] newState = (int[,])currentState.Clone();
+                            byte[,] newState = (byte[,])currentState.Clone();
                             newState[blankRow, col] += 1;
                             newState[upRow, col] -= 1;
                             var newStateString = WalkingDistanceStateToString(newState);
@@ -166,7 +166,7 @@ namespace SlidingTiles
                     {
                         if (currentState[downRow, col] > 0)
                         {
-                            int[,] newState = (int[,])currentState.Clone();
+                            byte[,] newState = (byte[,])currentState.Clone();
                             newState[blankRow, col] += 1;
                             newState[downRow, col] -= 1;
                             var newStateString = WalkingDistanceStateToString(newState);
@@ -186,14 +186,14 @@ namespace SlidingTiles
             return database;
         }
 
-        private (int[,] state, byte initialBlankRow) BuildGoalWalkingDistanceState(int width)
+        private (byte[,] state, byte initialBlankRow) BuildGoalWalkingDistanceState(int width)
         {
-            var state = new int[width, width];
+            var state = new byte[width, width];
             for (int i = 0; i < width; i++)
             {
-                state[i, i] = width;
+                state[i, i] = (byte)width;
             }
-            state[width - 1, width - 1] = width - 1;
+            state[width - 1, width - 1] = (byte)(width - 1);
             return (state, (byte)(width - 1));
         }
 
