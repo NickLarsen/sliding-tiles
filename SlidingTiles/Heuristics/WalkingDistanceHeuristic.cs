@@ -88,7 +88,8 @@ namespace SlidingTiles
 
         private IDictionary<string, int> BuildWalkingDistanceDatabase(int width)
         {
-            var database = new Dictionary<string, int>();
+            int initialCapacity = Convert.ToInt32(Math.Pow(10, width));
+            var database = new Dictionary<string, int>(initialCapacity);
 
             var state = BuildGoalWalkingDistanceState(width);
             var queue = new Queue<(int[,] state, int distance)>();
@@ -100,8 +101,8 @@ namespace SlidingTiles
                 var stateString = WalkingDistanceStateToString(currentState);
                 if (database.ContainsKey(stateString))
                 {
-                    // state already visited so bail because we have already
-                    // found the shortest step path to it
+                    // shouldn't happen because we're checking before inserting but just in case
+                    // to prevent infinite loops
                     continue;
                 }
                 database[stateString] = distance;
@@ -139,7 +140,11 @@ namespace SlidingTiles
                             int[,] newState = (int[,])currentState.Clone();
                             newState[blankRow, col] += 1;
                             newState[upRow, col] -= 1;
-                            queue.Enqueue((newState, distance + 1));
+                            var newStateString = WalkingDistanceStateToString(newState);
+                            if (!database.ContainsKey(newStateString))
+                            {
+                                queue.Enqueue((newState, distance + 1));
+                            }
                         }
                     }
                 }
@@ -155,7 +160,11 @@ namespace SlidingTiles
                             int[,] newState = (int[,])currentState.Clone();
                             newState[blankRow, col] += 1;
                             newState[downRow, col] -= 1;
-                            queue.Enqueue((newState, distance + 1));
+                            var newStateString = WalkingDistanceStateToString(newState);
+                            if (!database.ContainsKey(newStateString))
+                            {
+                                queue.Enqueue((newState, distance + 1));
+                            }
                         }
                     }
                 }
