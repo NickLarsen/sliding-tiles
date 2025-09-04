@@ -105,8 +105,25 @@ namespace SlidingTiles
             var database = new Dictionary<string, byte>(initialCapacity);
 
             var state = BuildGoalWalkingDistanceState(width);
-            var queue = new Queue<(int[,] state, byte distance)>();
-            queue.Enqueue((state, 0));
+            var queue = new Queue<(int[,] state, byte distance, byte blankRow)>();
+            
+            // Calculate initial blank row position
+            byte initialBlankRow = 0;
+            for (int row = 0; row < width; row++)
+            {
+                int tileCount = 0;
+                for (int col = 0; col < width; col++)
+                {
+                    tileCount += state[row, col];
+                }
+                if (tileCount == (width - 1))
+                {
+                    initialBlankRow = (byte)row;
+                    break;
+                }
+            }
+            
+            queue.Enqueue((state, 0, initialBlankRow));
             
             int currentLevel = 0;
             int nodesAtCurrentLevel = 0;
@@ -115,7 +132,7 @@ namespace SlidingTiles
             while (queue.Count > 0)
             {
                 // add the state to the database
-                var (currentState, distance) = queue.Dequeue();
+                var (currentState, distance, blankRow) = queue.Dequeue();
                 
                 // Check if we've moved to a new level
                 if (distance > currentLevel)
@@ -137,28 +154,6 @@ namespace SlidingTiles
                 }
                 database[stateString] = distance;
 
-                // find which row the blank is on
-                var blankRow = -1;
-                for (int row = 0; row < _height; row++)
-                {
-                    int tileCount = 0;
-                    for (int col = 0; col < width; col++)
-                    {
-                        tileCount += currentState[row, col];
-                    }
-                    if (tileCount == (_width - 1))
-                    {
-                        blankRow = row;
-                        break;
-                    }
-                }
-                if (blankRow == -1)
-                {
-                    var e = new Exception("blank row was -1, should not happen");
-                    e.Data.Add("state", stateString);
-                    throw e;
-                }
-
                 // try to move the blank up
                 int upRow = blankRow + 1;
                 if (upRow < _height)
@@ -173,7 +168,7 @@ namespace SlidingTiles
                             var newStateString = WalkingDistanceStateToString(newState);
                             if (!database.ContainsKey(newStateString))
                             {
-                                queue.Enqueue((newState, (byte)(distance + 1)));
+                                queue.Enqueue((newState, (byte)(distance + 1), (byte)upRow));
                             }
                         }
                     }
@@ -193,7 +188,7 @@ namespace SlidingTiles
                             var newStateString = WalkingDistanceStateToString(newState);
                             if (!database.ContainsKey(newStateString))
                             {
-                                queue.Enqueue((newState, (byte)(distance + 1)));
+                                queue.Enqueue((newState, (byte)(distance + 1), (byte)downRow));
                             }
                         }
                     }
