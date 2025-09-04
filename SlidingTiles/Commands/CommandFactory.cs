@@ -74,5 +74,19 @@ namespace SlidingTiles.Commands
             generateCommand.SetHandler((outputFile, source) => new GenerateCommand(outputFile, source).Execute(), outputFileOption, sourceOption);
             return generateCommand;
         }
+
+        public static Command CreateBuildWalkingDistanceCommand()
+        {
+            var buildWalkingDistanceCommand = new Command("build-walking-distance", "Build WalkingDistanceHeuristic database for a specific size");
+            var sizeOption = new Option<int>(
+                "--size",
+                "The size of the puzzle (e.g., 3 for 3x3, 4 for 4x4)")
+            {
+                IsRequired = true
+            };
+            buildWalkingDistanceCommand.AddOption(sizeOption);
+            buildWalkingDistanceCommand.SetHandler((size) => new BuildWalkingDistanceCommand(size).Execute(), sizeOption);
+            return buildWalkingDistanceCommand;
+        }
     }
 }

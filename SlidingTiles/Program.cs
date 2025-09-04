@@ -27,6 +27,9 @@ namespace SlidingTiles
             var generateCommand = CommandFactory.CreateGenerateCommand();
             rootCommand.AddCommand(generateCommand);
 
+            var buildWalkingDistanceCommand = CommandFactory.CreateBuildWalkingDistanceCommand();
+            rootCommand.AddCommand(buildWalkingDistanceCommand);
+
 
 
             return rootCommand.Invoke(args);
