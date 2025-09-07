@@ -101,7 +101,7 @@ namespace SlidingTiles
 
         private IDictionary<string, byte> BuildWalkingDistanceDatabase(int width)
         {
-            int initialCapacity = Convert.ToInt32(Math.Pow(10, width));
+            int initialCapacity = Convert.ToInt32(Math.Pow(10, width+2));
             var database = new Dictionary<string, byte>(initialCapacity);
 
             var (state, initialBlankRow) = BuildGoalWalkingDistanceState(width);
