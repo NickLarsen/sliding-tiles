@@ -55,7 +55,7 @@ namespace SlidingTiles
             return rowWd + colWd;
         }
 
-        private byte[,] ConvertToWalkingDistanceState(PuzzleState state, Direction direction)
+        public byte[,] ConvertToWalkingDistanceState(PuzzleState state, Direction direction)
         {
             var result = new byte[_width, _width];
             for (int actualRow = 0; actualRow < state.Height; actualRow++)
@@ -197,7 +197,7 @@ namespace SlidingTiles
             return (state, (byte)(width - 1));
         }
 
-        enum Direction
+        public enum Direction
         {
             Row,
             Column,
