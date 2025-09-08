@@ -9,10 +9,11 @@ namespace SlidingTiles
         public string Abbreviation => "wd";
         public string Description => "Walking distance heuristic for sliding puzzles using precomputed walking distance database";
 
-        private readonly IDictionary<string, byte> _walkingDistanceDatabase;
+        private readonly IDictionary<byte[,], byte> _walkingDistanceDatabase;
         private readonly int _width;
         private readonly int _height;
         private readonly ILogger<WalkingDistanceHeuristic> _logger;
+        private readonly ByteArrayEqualityComparer _equalityComparer;
 
         public int MaxHeuristicValue => _walkingDistanceDatabase.Values.Max();
         public int DatabaseSize => _walkingDistanceDatabase.Count;
@@ -36,6 +37,7 @@ namespace SlidingTiles
             _width = width;
             _height = height;
             _logger = logger;
+            _equalityComparer = new ByteArrayEqualityComparer();
             _walkingDistanceDatabase = BuildWalkingDistanceDatabase(width);
         }
 
@@ -43,13 +45,11 @@ namespace SlidingTiles
         {
             // row-wise walking distance
             var rowWdState = ConvertToWalkingDistanceState(state, Direction.Row);
-            var rowWdString = WalkingDistanceStateToString(rowWdState);
-            var rowWd = _walkingDistanceDatabase[rowWdString];
+            var rowWd = _walkingDistanceDatabase[rowWdState];
 
             // column-wise walking distance
             var colWdState = ConvertToWalkingDistanceState(state, Direction.Column);
-            var colWdString = WalkingDistanceStateToString(colWdState);
-            var colWd = _walkingDistanceDatabase[colWdString];
+            var colWd = _walkingDistanceDatabase[colWdState];
 
             // return the sum of the two
             return rowWd + colWd;
@@ -86,30 +86,16 @@ namespace SlidingTiles
             return result;
         }
 
-        private string WalkingDistanceStateToString(byte[,] state)
-        {
-            var sb = new StringBuilder();
-            for (int i = 0; i < state.GetLength(0); i++)
-            {
-                for (int j = 0; j < state.GetLength(1); j++)
-                {
-                    sb.Append(state[i, j]);
-                }
-            }
-            return sb.ToString();
-        }
-
-        private IDictionary<string, byte> BuildWalkingDistanceDatabase(int width)
+        private IDictionary<byte[,], byte> BuildWalkingDistanceDatabase(int width)
         {
             int initialCapacity = Convert.ToInt32(Math.Pow(10, width+2));
-            var database = new Dictionary<string, byte>(initialCapacity);
+            var database = new Dictionary<byte[,], byte>(initialCapacity, _equalityComparer);
 
             var (state, initialBlankRow) = BuildGoalWalkingDistanceState(width);
             var queue = new Queue<(byte[,] state, byte distance, byte blankRow)>();
             
             // Add the initial state to database immediately
-            var initialStateString = WalkingDistanceStateToString(state);
-            database[initialStateString] = 0;
+            database[state] = 0;
             queue.Enqueue((state, 0, initialBlankRow));
             
             int currentLevel = 0;
@@ -143,11 +129,10 @@ namespace SlidingTiles
                             byte[,] newState = (byte[,])currentState.Clone();
                             newState[blankRow, col] += 1;
                             newState[upRow, col] -= 1;
-                            var newStateString = WalkingDistanceStateToString(newState);
-                            if (!database.ContainsKey(newStateString))
+                            if (!database.ContainsKey(newState))
                             {
                                 // Add to database immediately when generated
-                                database[newStateString] = (byte)(distance + 1);
+                                database[newState] = (byte)(distance + 1);
                                 queue.Enqueue((newState, (byte)(distance + 1), (byte)upRow));
                             }
                         }
@@ -165,11 +150,10 @@ namespace SlidingTiles
                             byte[,] newState = (byte[,])currentState.Clone();
                             newState[blankRow, col] += 1;
                             newState[downRow, col] -= 1;
-                            var newStateString = WalkingDistanceStateToString(newState);
-                            if (!database.ContainsKey(newStateString))
+                            if (!database.ContainsKey(newState))
                             {
                                 // Add to database immediately when generated
-                                database[newStateString] = (byte)(distance + 1);
+                                database[newState] = (byte)(distance + 1);
                                 queue.Enqueue((newState, (byte)(distance + 1), (byte)downRow));
                             }
                         }
@@ -199,6 +183,40 @@ namespace SlidingTiles
         {
             Row,
             Column,
+        }
+    }
+
+    public class ByteArrayEqualityComparer : IEqualityComparer<byte[,]>
+    {
+        public bool Equals(byte[,]? x, byte[,]? y)
+        {
+            if (x == null && y == null) return true;
+            if (x == null || y == null) return false;
+            if (x.GetLength(0) != y.GetLength(0) || x.GetLength(1) != y.GetLength(1)) return false;
+            
+            for (int i = 0; i < x.GetLength(0); i++)
+            {
+                for (int j = 0; j < x.GetLength(1); j++)
+                {
+                    if (x[i, j] != y[i, j]) return false;
+                }
+            }
+            return true;
+        }
+        
+        public int GetHashCode(byte[,]? obj)
+        {
+            if (obj == null) return 0;
+            
+            int hash = 17;
+            for (int i = 0; i < obj.GetLength(0); i++)
+            {
+                for (int j = 0; j < obj.GetLength(1); j++)
+                {
+                    hash = hash * 31 + obj[i, j].GetHashCode();
+                }
+            }
+            return hash;
         }
     }
 }
