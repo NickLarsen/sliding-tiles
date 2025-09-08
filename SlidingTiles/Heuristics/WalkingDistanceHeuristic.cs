@@ -107,6 +107,9 @@ namespace SlidingTiles
             var (state, initialBlankRow) = BuildGoalWalkingDistanceState(width);
             var queue = new Queue<(byte[,] state, byte distance, byte blankRow)>();
             
+            // Add the initial state to database immediately
+            var initialStateString = WalkingDistanceStateToString(state);
+            database[initialStateString] = 0;
             queue.Enqueue((state, 0, initialBlankRow));
             
             int currentLevel = 0;
@@ -115,7 +118,7 @@ namespace SlidingTiles
             
             while (queue.Count > 0)
             {
-                // add the state to the database
+                // process the state from the queue (already in database)
                 var (currentState, distance, blankRow) = queue.Dequeue();
                 
                 // Check if we've moved to a new level
@@ -128,15 +131,6 @@ namespace SlidingTiles
                 
                 nodesAtCurrentLevel++;
                 totalNodesProcessed++;
-                
-                var stateString = WalkingDistanceStateToString(currentState);
-                if (database.ContainsKey(stateString))
-                {
-                    // shouldn't happen because we're checking before inserting but just in case
-                    // to prevent infinite loops
-                    continue;
-                }
-                database[stateString] = distance;
 
                 // try to move the blank up
                 int upRow = blankRow + 1;
@@ -152,13 +146,15 @@ namespace SlidingTiles
                             var newStateString = WalkingDistanceStateToString(newState);
                             if (!database.ContainsKey(newStateString))
                             {
+                                // Add to database immediately when generated
+                                database[newStateString] = (byte)(distance + 1);
                                 queue.Enqueue((newState, (byte)(distance + 1), (byte)upRow));
                             }
                         }
                     }
                 }
 
-                // try to move the bank down
+                // try to move the blank down
                 int downRow = blankRow - 1;
                 if (downRow >= 0)
                 {
@@ -172,6 +168,8 @@ namespace SlidingTiles
                             var newStateString = WalkingDistanceStateToString(newState);
                             if (!database.ContainsKey(newStateString))
                             {
+                                // Add to database immediately when generated
+                                database[newStateString] = (byte)(distance + 1);
                                 queue.Enqueue((newState, (byte)(distance + 1), (byte)downRow));
                             }
                         }
